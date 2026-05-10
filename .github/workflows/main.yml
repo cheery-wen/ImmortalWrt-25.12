@@ -166,7 +166,9 @@ jobs:
 
           find openwrt/bin/targets -type f \( -name "*sysupgrade*" -o -name "*factory*" -o -name "*combined*" \) | while read file; do
             base=$(basename "$file")
-            cp "$file" "firmware/${date1}_${OPENWRT_NAME}_${device}_${base}"
+            # 去除前三段（厂家-平台-子平台-），保留固件特征部分
+            clean_base=$(echo "$base" | sed -E 's/^([^-]+-){3}//')
+            cp "$file" "firmware/${date1}_${OPENWRT_NAME}_${device}_${clean_base}"
           done
 
           cd firmware
