@@ -23,17 +23,16 @@
 
 1. 下载固件 `*.img.gz` 并解压
 2. 写入硬盘/U盘：`dd if=firmware.img of=/dev/sdX bs=4M`
-3. 默认 IP：`192.168.5.1`，无密码 (首次需设置)
+3. 默认 IP：`192.168.1.1`，无密码 (首次需设置)
 
+## 云编译
 
-注意事项
-
-· 本固件仅包含有线网络驱动，无 Wi-Fi/声卡支持
-· Passwall 使用 nftables 模式，请勿开启 iptables 兼容代理
-· 若需 Docker，请手动安装 dockerd 及 luci-app-docker
-
-致谢
-
-· 感谢 ImmortalWrt 项目提供源码
-· 感谢 OpenWrt 社区
-· 感谢所有开源贡献者的辛勤付出
+- 使用 `.config` 文件配合 GitHub Actions 或本地 OpenWrt 构建系统
+- 命令示例：
+  ```bash
+  ./scripts/feeds update -a
+  ./scripts/feeds install -a
+  cp .config .config.bak
+  make defconfig
+  make -j$(nproc) download
+  make -j$(nproc) V=s
