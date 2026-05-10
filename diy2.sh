@@ -14,6 +14,12 @@ rm -rf feeds/packages/utils/lucky
 rm -rf feeds/luci/applications/luci-app-passwall
 rm -rf feeds/packages/net/passwall
 rm -rf feeds/packages/net/passwall-utils
+rm -rf feeds/packages/net/openwrt-passwall
+rm -rf feeds/packages/net/openwrt-passwall-utils
+rm -rf feeds/packages/net/xray-core
+rm -rf feeds/packages/net/sing-box
+rm -rf feeds/packages/net/hysteria
+rm -rf feeds/packages/net/tuic-client
 
 # ==================================================
 # 自适应网口
