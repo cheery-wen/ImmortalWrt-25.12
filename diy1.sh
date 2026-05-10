@@ -15,7 +15,6 @@ git clone --depth 1 https://github.com/gdy666/luci-app-lucky.git package/luci-ap
 # PassWall
 git clone --depth 1 https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git package/openwrt-passwall-packages
 git clone --depth 1 https://github.com/Openwrt-Passwall/openwrt-passwall.git package/luci-app-passwall
-echo "✅ PassWall 已添加"
 
 # poweroff
 git clone --depth 1 https://github.com/esirplayground/luci-app-poweroff.git package/luci-app-poweroff
