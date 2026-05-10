@@ -101,10 +101,10 @@ GET_REVISION="R$(date +%y.%m.%d)"
 cat > package/base-files/files/etc/openwrt_release <<EOF
 DISTRIB_ID='ImmortalWrt'
 DISTRIB_RELEASE='25.12'
-DISTRIB_REVISION='$GET_REVISION'
+DISTRIB_REVISION=''
 DISTRIB_TARGET='x86/64'
 DISTRIB_ARCH='x86_64'
-DISTRIB_DESCRIPTION='OpenWrt compiled by cheery on $(date +%Y.%m.%d) - $GET_REVISION / LuCI openwrt-25.12 branch'
+DISTRIB_DESCRIPTION='OpenWrt compiled by cheery on $(date +%Y.%m.%d) / LuCI openwrt-25.12 branch'
 DISTRIB_TAINTS='no-all busybox'
 EOF
 
