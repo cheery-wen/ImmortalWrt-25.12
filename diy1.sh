@@ -5,15 +5,6 @@ echo "========================================="
 echo "ImmortalWrt DIY1"
 echo "========================================="
 
-# 删除冲突插件
-rm -rf feeds/luci/themes/luci-theme-argon
-rm -rf feeds/luci/applications/luci-app-argon-config
-rm -rf feeds/luci/applications/luci-app-poweroff
-rm -rf feeds/luci/applications/luci-app-lucky
-rm -rf feeds/packages/net/lucky
-rm -rf feeds/packages/utils/lucky
-
-
 # Argon
 git clone --depth 1 https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
 git clone --depth 1 https://github.com/jerrykuku/luci-app-argon-config.git package/luci-app-argon-config
