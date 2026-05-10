@@ -1,4 +1,4 @@
-name: 编译 ImmortalWrt master (最终优化版)
+name: 编译 ImmortalWrt 25.12 (最终优化版)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: master
+  REPO_BRANCH: openwrt-25.12
   CONFIG_FILE: .config
   FEEDS_CONF: feeds.conf.default
   DIY1_SH: diy1.sh
