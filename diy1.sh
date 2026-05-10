@@ -14,8 +14,8 @@ sed -i "s/hostname='ImmortalWrt'/hostname='OpenWrt'/g" package/base-files/files/
 # 清除默认密码
 sed -i 's/root::0:0:99999:7:::/root::::::::/g' package/base-files/files/etc/shadow 2>/dev/null || true
 
-# 内核版本
-sed -i 's/KERNEL_PATCHVER:=6.6/KERNEL_PATCHVER:=6.12/g' target/linux/x86/Makefile || true
+sed -i "s/DISTRIB_DESCRIPTION=.*/DISTRIB_DESCRIPTION='OpenWrt 25.12 ($(TZ=UTC-8 date "+%Y.%m.%d") compiled by cheery)'/g" \
+package/base-files/files/etc/openwrt_release
 
 # 删除冲突插件
 rm -rf feeds/luci/themes/luci-theme-argon
