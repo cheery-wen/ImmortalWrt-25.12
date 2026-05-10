@@ -29,8 +29,8 @@ git clone --depth 1 https://github.com/jerrykuku/luci-app-argon-config.git packa
 git clone --depth 1 https://github.com/gdy666/luci-app-lucky.git package/luci-app-lucky
 
 # Passwall
-git clone --depth 1 https://github.com/xiaorouji/openwrt-passwall-packages.git package/openwrt-passwall-packages
-git clone --depth 1 https://github.com/xiaorouji/openwrt-passwall.git package/luci-app-passwall
+git clone --depth 1 https://github.com/Openwrt-Passwall/openwrt-passwall-packages package/passwall-packages || true
+git clone --depth 1 https://github.com/Openwrt-Passwall/openwrt-passwall package/luci-app-passwall || true
 
 # poweroff
 git clone --depth 1 https://github.com/esirplayground/luci-app-poweroff.git package/luci-app-poweroff
