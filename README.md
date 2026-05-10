@@ -25,17 +25,6 @@
 2. 写入硬盘/U盘：`dd if=firmware.img of=/dev/sdX bs=4M`
 3. 默认 IP：`192.168.5.1`，无密码 (首次需设置)
 
-## 云编译
-
-- 使用 `.config` 文件配合 GitHub Actions 或本地 OpenWrt 构建系统
-- 命令示例：
-  ```bash
-  ./scripts/feeds update -a
-  ./scripts/feeds install -a
-  cp .config .config.bak
-  make defconfig
-  make -j$(nproc) download
-  make -j$(nproc) V=s
 
 注意事项
 
