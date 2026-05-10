@@ -36,16 +36,15 @@
   make defconfig
   make -j$(nproc) download
   make -j$(nproc) V=s
+## 注意事项
 
-注意事项
+- 本固件仅包含有线网络驱动，无 Wi-Fi/声卡支持
+- Passwall 使用 nftables 模式，请勿开启 iptables 兼容代理
+- 若需 Docker，请手动安装 `dockerd` 及 `luci-app-docker`
 
-· 本固件仅包含有线网络驱动，无 Wi-Fi/声卡支持
-· Passwall 使用 nftables 模式，请勿开启 iptables 兼容代理
-· 若需 Docker，请手动安装 dockerd 及 luci-app-docker
+## 致谢
 
-致谢
-
-· ImmortalWrt
-· OpenWrt
-· 感谢所有开源贡献者的辛勤付出
+- [ImmortalWrt](https://github.com/immortalwrt/immortalwrt)
+- [OpenWrt](https://openwrt.org)
+- 感谢所有开源贡献者的辛勤付出
   
