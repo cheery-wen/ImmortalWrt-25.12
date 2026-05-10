@@ -11,6 +11,9 @@ rm -rf feeds/luci/applications/luci-app-poweroff
 rm -rf feeds/luci/applications/luci-app-lucky
 rm -rf feeds/packages/net/lucky
 rm -rf feeds/packages/utils/lucky
+rm -rf feeds/luci/applications/luci-app-passwall
+rm -rf feeds/packages/net/passwall
+rm -rf feeds/packages/net/passwall-utils
 
 # ==================================================
 # 自适应网口
@@ -95,7 +98,7 @@ DISTRIB_RELEASE='25.12'
 DISTRIB_REVISION='$GET_REVISION'
 DISTRIB_TARGET='x86/64'
 DISTRIB_ARCH='x86_64'
-DISTRIB_DESCRIPTION='OpenWrt ($(date +%Y.%m.%d)) compiled by cheery)$GET_REVISION / LuCI openwrt-25.12 branch'
+DISTRIB_DESCRIPTION='OpenWrt compiled by cheery on $(date +%Y.%m.%d) - $GET_REVISION / LuCI openwrt-25.12 branch'
 DISTRIB_TAINTS='no-all busybox'
 EOF
 
