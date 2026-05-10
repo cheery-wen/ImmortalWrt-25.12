@@ -23,7 +23,7 @@
 
 1. 下载固件 `*.img.gz` 并解压
 2. 写入硬盘/U盘：`dd if=firmware.img of=/dev/sdX bs=4M`
-3. 默认 IP：`192.168.1.1`，无密码 (首次需设置)
+3. 默认 IP：`192.168.5.1`，无密码 (首次需设置)
 
 ## 云编译
 
@@ -36,48 +36,6 @@
   make defconfig
   make -j$(nproc) download
   make -j$(nproc) V=s
-已在 README.md 末尾添加感谢语，更新如下：
-
-```markdown
-# ImmortalWrt 25.12 x86_64 固件
-
-基于官方 ImmortalWrt 25.12 源码构建，集成常用网络工具与硬件驱动。
-
-## 主要特性
-
-- **平台**：x86_64 (EFI + GRUB, SquashFS, 分区: 32MB+320MB)
-- **包管理**：APK (apk-mbedtls)
-- **防火墙**：Firewall4 + nftables (无 iptables 遗留，兼容层 iptables-nft)
-- **IPv6**：完整支持 (DHCPv6, odhcp6c, odhcpd-ipv6only)
-- **网络优化**：BBR 拥塞控制，TUN，Fast Classifier 加速
-- **存储支持**：USB 3.0/2.0，文件系统 ext4/exFAT/f2fs/ntfs3/vfat
-- **虚拟化**：KVM (Intel/AMD)，Docker 兼容 (veth, br-netfilter)
-- **网卡驱动**：主流有线网卡 (Intel 1G/10G/2.5G, Realtek, Broadcom, Mellanox, VMware)
-- **常用插件**：
-  - Argon 主题及配置
-  - Passwall (Hysteria, nftables 透明代理)
-  - Lucky，DDNS (Cloudflare)，UPnP (nftables)，Zerotier
-  - 文件传输，磁盘管理，Samba4，TTYD，VLMCSD，定时重启，URL 过滤
-- **构建格式**：GZIP 压缩的 EFI 镜像
-
-## 使用方法
-
-1. 下载固件 `*.img.gz` 并解压
-2. 写入硬盘/U盘：`dd if=firmware.img of=/dev/sdX bs=4M`
-3. 默认 IP：`192.168.1.1`，无密码 (首次需设置)
-
-## 云编译
-
-- 使用 `.config` 文件配合 GitHub Actions 或本地 OpenWrt 构建系统
-- 命令示例：
-  ```bash
-  ./scripts/feeds update -a
-  ./scripts/feeds install -a
-  cp .config .config.bak
-  make defconfig
-  make -j$(nproc) download
-  make -j$(nproc) V=s
-```
 
 注意事项
 
@@ -90,5 +48,4 @@
 · ImmortalWrt
 · OpenWrt
 · 感谢所有开源贡献者的辛勤付出
-
-```
+  
