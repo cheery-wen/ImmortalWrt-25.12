@@ -61,11 +61,6 @@
 
 ## 致谢
 
-- ImmortalWrt – 项目源码与构建系统
-- OpenWrt – 开源路由器操作系统
-- jerrykuku – Argon 主题及配置
-- Openwrt-Passwall – Passwall 系列插件
-- gdy666 – Lucky & Luci-app-lucky
-- esirplayground – Luci-app-poweroff
-- sbwml – Golang 1.26 移植
+- ImmortalWrt 
+- OpenWrt 
 - 感谢所有开源贡献者的辛勤付出
