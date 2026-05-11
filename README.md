@@ -1,23 +1,26 @@
 # ImmortalWrt 25.12 x86_64 固件
 
-基于官方 ImmortalWrt 25.12 源码构建，集成常用网络工具与硬件驱动。
+基于官方 ImmortalWrt 25.12 源码构建，集成高性能内核与常用网络/存储插件。
 
 ## 主要特性
 
-- **平台**：x86_64 (EFI + GRUB, SquashFS, 分区: 32MB+320MB)
+- **平台**：x86_64 (EFI + GRUB, SquashFS, 分区: 32MB + 512MB)
 - **包管理**：APK (apk-mbedtls)
-- **防火墙**：Firewall4 + nftables (无 iptables 遗留，兼容层 iptables-nft)
-- **IPv6**：完整支持 (DHCPv6, odhcp6c, odhcpd-ipv6only)
-- **网络优化**：BBR 拥塞控制，TUN，Fast Classifier 加速
-- **存储支持**：USB 3.0/2.0，文件系统 ext4/exFAT/f2fs/ntfs3/vfat
-- **虚拟化**：KVM (Intel/AMD)，Docker 兼容 (veth, br-netfilter)
-- **网卡驱动**：主流有线网卡 (Intel 1G/10G/2.5G, Realtek, Broadcom, Mellanox, VMware)
+- **内核优化**：1000Hz 时钟、BBR 拥塞控制、TCP Fast Open、ZSWAP、Cgroup v2、磁盘队列调度 (mq-deadline/kyber)
+- **防火墙**：Firewall4 + nftables (纯 nft 模式，提供 iptables-nft 兼容层)
+- **IPv6**：完整支持 (DHCPv6、NAT6、隧道)
+- **存储与 USB**：
+  - 文件系统：ext4 / exFAT / NTFS3
+  - USB 全速 (1.1/2.0/3.0)，UAS 支持
+  - 自动挂载、TRIM、S.M.A.R.T.、Samba4 共享
+- **网卡驱动**：主流有线网卡 (Intel 1G/10G/2.5G、Realtek、VMware)
 - **常用插件**：
   - Argon 主题及配置
   - Passwall (Hysteria, nftables 透明代理)
   - Lucky，DDNS (Cloudflare)，UPnP (nftables)，Zerotier
-  - 文件传输，磁盘管理，Samba4，TTYD，VLMCSD，定时重启，URL 过滤
-- **构建格式**：GZIP 压缩的 EFI 镜像
+  - 文件传输，磁盘管理，TTYD，VLMCSD，定时重启
+  - CPU 调频，时间控制，nft QoS，Chrony 时间同步
+- **网络加速**：Fast Classifier
 
 ## 使用方法
 
@@ -25,18 +28,7 @@
 2. 写入硬盘/U盘：`dd if=firmware.img of=/dev/sdX bs=4M`
 3. 默认 IP：`192.168.5.1`，无密码 (首次需设置)
 
-## 云编译
-
-- 使用 `.config` 文件配合 GitHub Actions 或本地 OpenWrt 构建系统
-- 命令示例：
-  ```bash
-  ./scripts/feeds update -a
-  ./scripts/feeds install -a
-  cp .config .config.bak
-  make defconfig
-  make -j$(nproc) download
-  make -j$(nproc) V=s
-## 注意事项
+# 注意事项
 
 - 本固件仅包含有线网络驱动，无 Wi-Fi/声卡支持
 - Passwall 使用 nftables 模式，请勿开启 iptables 兼容代理
@@ -44,7 +36,6 @@
 
 ## 致谢
 
-- [ImmortalWrt](https://github.com/immortalwrt/immortalwrt)
-- [OpenWrt](https://openwrt.org)
+- ImmortalWrt
+- OpenWrt
 - 感谢所有开源贡献者的辛勤付出
-  
