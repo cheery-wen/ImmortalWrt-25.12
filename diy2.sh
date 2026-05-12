@@ -30,28 +30,7 @@ rm -rf feeds/packages/net/hysteria
 rm -rf feeds/packages/net/tuic-client
 
 # ==================================================
-# 3. 强制锁定默认主题配置 (files 目录覆盖机制)
-# ==================================================
-mkdir -p files/etc/config
-cat > files/etc/config/luci << "EOF"
-config core 'main'
-	option lang 'zh_hans'
-	option mediaurlbase '/luci-static/argon'
-	option resourcebase '/luci-static/resources'
-
-config internal 'themes'
-	option Argon '/luci-static/argon'
-	option Bootstrap '/luci-static/bootstrap'
-
-config internal 'languages'
-	option zh_hans '简体中文 (Chinese Simplified)'
-
-config internal 'main'
-	option default_theme 'Argon'
-EOF
-
-# ==================================================
-# 4. 自适应网口
+# 3. 自适应网口
 # ==================================================
 BOARD_D_PATH="target/linux/x86/base-files/etc/board.d"
 mkdir -p "$BOARD_D_PATH"
@@ -94,14 +73,14 @@ EOF
 chmod +x package/base-files/files/etc/uci-defaults/99-force-board-detect
 
 # ==================================================
-# 5. 编译工具链优化 (Golang 26.x )
+# 4. 编译工具链优化 (Golang 26.x )
 # ==================================================
 echo "更换 Golang 26.x..."
 rm -rf dl/go-mod-cache 2>/dev/null || true
 rm -rf feeds/packages/lang/golang
 git clone --depth 1 -b 26.x https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
 # ==================================================
-# 6. 基础系统属性修改
+# 5. 基础系统属性修改
 # ==================================================
 echo "修改系统默认配置..."
 # 修改默认 IP 为 192.168.5.1
@@ -112,5 +91,8 @@ sed -i "s/hostname='ImmortalWrt'/hostname='OpenWrt'/g" package/base-files/files/
 
 # 移除 root 默认密码
 sed -i 's/^root:[^:]*:/root::/' package/base-files/files/etc/shadow
+
+# 修改默认主题
+sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile || true
 
 echo "✅ DIY2 最终逻辑修复版注入完成！"
