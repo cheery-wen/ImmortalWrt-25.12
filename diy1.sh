@@ -16,7 +16,7 @@ git clone --depth 1 https://github.com/gdy666/luci-app-lucky.git package/luci-ap
 git clone --depth 1 https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git package/openwrt-passwall-packages
 git clone --depth 1 https://github.com/Openwrt-Passwall/openwrt-passwall.git package/luci-app-passwall
 
-# PowerOffDevice (替换原 luci-app-poweroff，以解决中文缺失问题)
+# PowerOffDevice 
 git clone --depth 1 -b main https://github.com/sirpdboy/luci-app-poweroffdevice.git package/luci-app-poweroffdevice
 
 echo "========================================="
