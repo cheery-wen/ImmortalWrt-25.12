@@ -51,51 +51,47 @@ config internal 'main'
 EOF
 
 # ==================================================
-# 4. 进阶网口自适应 (uci-defaults 机制) - 核心逻辑修复
+# 4. 自适应网口 (路径修改为更通用的 package 覆盖方式)
 # ==================================================
-mkdir -p files/etc/uci-defaults
-cat > files/etc/uci-defaults/99-auto-network << "EOF"
+BOARD_D_PATH="package/base-files/files/etc/board.d"
+mkdir -p "$BOARD_D_PATH"
+
+cat > "$BOARD_D_PATH/02_network" << "EOF"
 #!/bin/sh
-
-# [修正] 使用标记文件判定，确保首次开机一定执行，即便系统自带了默认 network 配置
-if [ -f /etc/config/network.autodone ]; then
-    exit 0
-fi
-
 . /lib/functions.sh
 . /lib/functions/uci-defaults.sh
 
-# 获取物理网口并按逻辑顺序排序
+board_config_update
+
+# 获取所有物理网口，按 eth0, eth1 排序
 ALL_ETH=$(ls /sys/class/net/ | grep -E '^eth[0-9]+$' | sort -V)
 COUNT=$(echo "$ALL_ETH" | wc -l)
 
-board_config_update
-
-case "$COUNT" in
-    0)
-        # 无物理网口时不处理
-        ;;
-    1)
-        # 单网口设备：设为 LAN
-        ucidef_set_interface_lan "$(echo $ALL_ETH)"
-        ;;
-    *)
-        # 多网口设备：第一个为 WAN，其余所有物理口进入 LAN 桥接
-        WAN_PORT=$(echo "$ALL_ETH" | head -n1)
-        LAN_PORTS=$(echo "$ALL_ETH" | tail -n +2)
-        ucidef_set_interfaces_lan_wan "$LAN_PORTS" "$WAN_PORT"
-        ;;
-esac
+if [ "$COUNT" -ge 2 ]; then
+    WAN_PORT=$(echo "$ALL_ETH" | head -n1)
+    LAN_PORTS=$(echo "$ALL_ETH" | tail -n +2)
+    # 将第一个网口设为 WAN，其余全部设为 LAN
+    ucidef_set_interfaces_lan_wan "$LAN_PORTS" "$WAN_PORT"
+elif [ "$COUNT" -eq 1 ]; then
+    ucidef_set_interface_lan "$ALL_ETH"
+fi
 
 board_config_flush
-
-# [修正] 写入标记文件，防止后续重启干扰用户的手动配置
-touch /etc/config/network.autodone
-
 exit 0
 EOF
-chmod +x files/etc/uci-defaults/99-auto-network
 
+chmod +x "$BOARD_D_PATH/02_network"
+
+# board_detect 兜底
+mkdir -p package/base-files/files/etc/uci-defaults
+cat > package/base-files/files/etc/uci-defaults/99-force-board-detect << "EOF"
+#!/bin/sh
+/bin/board_detect
+exit 0
+EOF
+chmod +x package/base-files/files/etc/uci-defaults/99-force-board-detect
+
+# ==================================================
 # 5. 编译工具链优化 (Golang 26.x )
 # ==================================================
 echo "更换 Golang 26.x..."
