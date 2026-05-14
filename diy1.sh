@@ -19,6 +19,9 @@ git clone --depth 1 https://github.com/Openwrt-Passwall/openwrt-passwall.git pac
 # PowerOffDevice 
 git clone --depth 1 https://github.com/sirpdboy/luci-app-poweroffdevice.git package/luci-app-poweroffdevice
 
+# ghfu
+git clone --depth 1 https://github.com/smallprogram/luci-app-ghfu.git package/luci-app-ghfu
+
 echo "========================================="
 echo "DIY1 完成"
 echo "========================================="
