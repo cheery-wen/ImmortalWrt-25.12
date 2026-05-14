@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "🚀 开始注入 ImmortalWrt 25.12 "
+echo "🚀 开始注入 ImmortalWrt 25.12 优化补丁"
 
-
+# ==================================================
 # 1. 彻底删除 feeds 冲突插件 (确保使用 package/ 下手动克隆的版本)
 # ==================================================
 echo "清理冲突插件..."
@@ -19,7 +19,7 @@ rm -rf feeds/packages/net/hysteria
 rm -rf feeds/packages/net/tuic-client
 
 # ==================================================
-# 2. 自适应网口
+# 2. 优化自适应网口 (符合软路由物理插线习惯：eth0为LAN，末尾为WAN)
 # ==================================================
 BOARD_D_PATH="target/linux/x86/base-files/etc/board.d"
 mkdir -p "$BOARD_D_PATH"
@@ -35,8 +35,9 @@ ALL_ETH=$(ls /sys/class/net/ | grep -E '^eth[0-9]+$' | grep -v '@' | sort -V)
 COUNT=$(echo "$ALL_ETH" | wc -l)
 
 if [ "$COUNT" -ge 2 ]; then
-    WAN_PORT=$(echo "$ALL_ETH" | head -n1)
-    LAN_PORTS=$(echo "$ALL_ETH" | tail -n +2 | tr '\n' ' ' | sed 's/ $//')
+    # 安全逻辑：将最后一个网口设为 WAN，其余全划归 LAN（防止 eth0 变 WAN 导致失联）
+    WAN_PORT=$(echo "$ALL_ETH" | tail -n1)
+    LAN_PORTS=$(echo "$ALL_ETH" | head -n -1 | tr '\n' ' ' | sed 's/ $//')
     ucidef_set_interfaces_lan_wan "$LAN_PORTS" "$WAN_PORT"
 elif [ "$COUNT" -eq 1 ]; then
     ucidef_set_interface_lan "$ALL_ETH"
@@ -48,17 +49,13 @@ EOF
 
 chmod +x "$BOARD_D_PATH/02_network"
 
-# ==================================================
 # board_detect 兜底
-# ==================================================
 mkdir -p package/base-files/files/etc/uci-defaults
-
 cat > package/base-files/files/etc/uci-defaults/99-force-board-detect << "EOF"
 #!/bin/sh
 /bin/board_detect
 exit 0
 EOF
-
 chmod +x package/base-files/files/etc/uci-defaults/99-force-board-detect
 
 # ==================================================
@@ -68,6 +65,7 @@ echo "更换 Golang 26.x..."
 rm -rf dl/go-mod-cache 2>/dev/null || true
 rm -rf feeds/packages/lang/golang
 git clone --depth 1 -b 26.x https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
+
 # ==================================================
 # 4. 基础系统属性修改
 # ==================================================
@@ -82,19 +80,26 @@ sed -i "s/hostname='ImmortalWrt'/hostname='OpenWrt'/g" package/base-files/files/
 sed -i 's/^root:[^:]*:/root::/' package/base-files/files/etc/shadow
 
 # ==================================================
-# 修改固件版本
-# 替换 include/target.mk 中的默认描述
+# 5. 修改固件版本描述 (保留修订号)
+# ==================================================
+echo "正在注入自定义版本号文本..."
 sed -i "s|DISTRIB_DESCRIPTION='%D %V %C'|DISTRIB_DESCRIPTION='OpenWrt ($(date +%Y.%m.%d) compiled by cheery) / %V %C'|g" include/target.mk
-# 强制替换 base-files 释放出来的 release 文本（解决 ImmortalWrt 独有配置覆盖问题）
+
 if [ -f package/base-files/files/etc/openwrt_release ]; then
     sed -i "s|DISTRIB_DESCRIPTION='.*'|DISTRIB_DESCRIPTION='OpenWrt ($(date +%Y.%m.%d) compiled by cheery) / %V %C'|g" package/base-files/files/etc/openwrt_release
 fi
-# 强制清理 base-files 编译缓存（必须执行，否则不生效）
+
+# 额外处理：彻底擦除 package 下克隆的自定义主题中可能残留的硬编码 ImmortalWrt
+find package/ -type f -name "footer.htm" -o -name "sysauth.htm" | xargs sed -i "s|ImmortalWrt|OpenWrt|g" 2>/dev/null || true
+
+# 强制清理核心缓存，确保版本信息和 LuCI 主题 100% 重新编译
 rm -rf build_dir/target-*/base-files*
+rm -rf build_dir/target-*/luci-theme-argon*
+rm -rf build_dir/target-*/luci-base*
 
 # ==================================================
-
-# 修改默认主题
+# 6. 修改默认主题
+# ==================================================
 sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile || true
 
-echo "✅ DIY2 最终逻辑修复版注入完成！"
+echo "✅ DIY2 ImmortalWrt 25.12 优化补丁注入完成！"
