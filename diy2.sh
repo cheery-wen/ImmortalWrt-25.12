@@ -3,23 +3,12 @@ set -e
 
 echo "🚀 开始注入 ImmortalWrt 25.12 "
 
-# ==================================================
-# 1. 版本显示修改 (target.mk 机制)
-# ==================================================
-# 修改描述信息: OpenWrt (2026.05.11 compiled by cheery) / 25.12 rXXXX
-sed -i "s|DISTRIB_DESCRIPTION='%D %V %C'|DISTRIB_DESCRIPTION='OpenWrt ($(date +%Y.%m.%d) compiled by cheery) / %V %C'|g" include/target.mk
 
-# 修改修订号样式: 先重置再追加，防止重复运行脚本导致内容堆叠
-sed -i "s|DISTRIB_REVISION:='%R.*'|DISTRIB_REVISION:='%R'|g" include/target.mk
-sed -i "s|DISTRIB_REVISION:='%R'|DISTRIB_REVISION:='%R (R$(date +%y.%m.%d))'|g" include/target.mk
-
-# ==================================================
-# 2. 彻底删除 feeds 冲突插件 (确保使用 package/ 下手动克隆的版本)
+# 1. 彻底删除 feeds 冲突插件 (确保使用 package/ 下手动克隆的版本)
 # ==================================================
 echo "清理冲突插件..."
 rm -rf feeds/luci/themes/luci-theme-argon
 rm -rf feeds/luci/applications/luci-app-argon-config
-rm -rf feeds/luci/applications/luci-app-poweroff
 rm -rf feeds/luci/applications/luci-app-lucky
 rm -rf feeds/packages/net/lucky
 rm -rf feeds/packages/utils/lucky
@@ -30,7 +19,7 @@ rm -rf feeds/packages/net/hysteria
 rm -rf feeds/packages/net/tuic-client
 
 # ==================================================
-# 3. 自适应网口
+# 2. 自适应网口
 # ==================================================
 BOARD_D_PATH="target/linux/x86/base-files/etc/board.d"
 mkdir -p "$BOARD_D_PATH"
@@ -73,14 +62,14 @@ EOF
 chmod +x package/base-files/files/etc/uci-defaults/99-force-board-detect
 
 # ==================================================
-# 4. 编译工具链优化 (Golang 26.x )
+# 3. 编译工具链优化 (Golang 26.x )
 # ==================================================
 echo "更换 Golang 26.x..."
 rm -rf dl/go-mod-cache 2>/dev/null || true
 rm -rf feeds/packages/lang/golang
 git clone --depth 1 -b 26.x https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
 # ==================================================
-# 5. 基础系统属性修改
+# 4. 基础系统属性修改
 # ==================================================
 echo "修改系统默认配置..."
 # 修改默认 IP 为 192.168.5.1
@@ -91,6 +80,19 @@ sed -i "s/hostname='ImmortalWrt'/hostname='OpenWrt'/g" package/base-files/files/
 
 # 移除 root 默认密码
 sed -i 's/^root:[^:]*:/root::/' package/base-files/files/etc/shadow
+
+# ==================================================
+# 修改固件版本
+# 替换 include/target.mk 中的默认描述
+sed -i "s|DISTRIB_DESCRIPTION='%D %V %C'|DISTRIB_DESCRIPTION='OpenWrt ($(date +%Y.%m.%d) compiled by cheery) / %V %C'|g" include/target.mk
+# 强制替换 base-files 释放出来的 release 文本（解决 ImmortalWrt 独有配置覆盖问题）
+if [ -f package/base-files/files/etc/openwrt_release ]; then
+    sed -i "s|DISTRIB_DESCRIPTION='.*'|DISTRIB_DESCRIPTION='OpenWrt ($(date +%Y.%m.%d) compiled by cheery) / %V %C'|g" package/base-files/files/etc/openwrt_release
+fi
+# 强制清理 base-files 编译缓存（必须执行，否则不生效）
+rm -rf build_dir/target-*/base-files*
+
+# ==================================================
 
 # 修改默认主题
 sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile || true
