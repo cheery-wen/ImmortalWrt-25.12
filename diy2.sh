@@ -85,20 +85,70 @@ sed -i 's/^root:[^:]*:/root::/' package/base-files/files/etc/shadow
 # ==================================================
 # 5. 修改固件版本描述 (保留修订号)
 # ==================================================
-echo "正在注入自定义版本号文本..."
-sed -i "s|DISTRIB_DESCRIPTION='%D %V %C'|DISTRIB_DESCRIPTION='OpenWrt ($(date +%Y.%m.%d) compiled by cheery) / %V %C'|g" include/target.mk
+echo "正在注入自定义版本号与彻底去硬编码（剔除占位符纯净版）..."
 
-if [ -f package/base-files/files/etc/openwrt_release ]; then
-    sed -i "s|DISTRIB_DESCRIPTION='.*'|DISTRIB_DESCRIPTION='OpenWrt ($(date +%Y.%m.%d) compiled by cheery) / %V %C'|g" package/base-files/files/etc/openwrt_release
+# 提前声明日期变量，确保全局时间戳绝对统一
+COMPILE_DATE=$(date +%Y.%m.%d)
+# 【核心修正】彻底删除 %V 和 %C 占位符，防止系统在后台二次拼接硬编码版本号
+CUSTOM_VERSION="OpenWrt (${COMPILE_DATE} compiled by cheery)"
+CUSTOM_REVISION="${COMPILE_DATE} compiled by cheery"
+
+# ==========================================
+# 顶级版本主控文件补强（全局兜底）
+# ==========================================
+if [ -f include/version.mk ]; then
+    sed -i "s|VERSION_DIST:='.*'|VERSION_DIST:='OpenWrt'|g" include/version.mk
+    sed -i "s|VERSION_DIST:=.*|VERSION_DIST:=OpenWrt|g" include/version.mk
+    sed -i "s|ImmortalWrt|OpenWrt|g" include/version.mk
 fi
 
-# 额外处理：彻底擦除 package 下克隆的自定义主题中可能残留的硬编码 ImmortalWrt
-find package/ -type f -name "footer.htm" -o -name "sysauth.htm" | xargs sed -i "s|ImmortalWrt|OpenWrt|g" 2>/dev/null || true
+# ==========================================
+# 25.12 版本定义（Kconfig & 类 image-config 文件）
+# ==========================================
+find package/base-files/ -type f \( -name "Kconfig" -o -name "image-config.in" -o -name "Config.in" \) -print0 2>/dev/null | xargs -0 -r sed -i "s|default \"ImmortalWrt\"|default \"OpenWrt\"|g"
 
-# 强制清理核心缓存，确保版本信息和 LuCI 主题 100% 重新编译
+# 强行重写释放至固件的版本与发布信息（包含 openwrt_version 绝对覆盖）
+if [ -d package/base-files/files/etc ]; then
+    # 强制重写 openwrt_release
+    if [ -f package/base-files/files/etc/openwrt_release ]; then
+        sed -i "s|DISTRIB_DESCRIPTION='.*'|DISTRIB_DESCRIPTION='${CUSTOM_VERSION}'|g" package/base-files/files/etc/openwrt_release
+        sed -i "s|DISTRIB_ID='.*'|DISTRIB_ID='OpenWrt'|g" package/base-files/files/etc/openwrt_release
+        sed -i "s|DISTRIB_REVISION='.*'|DISTRIB_REVISION='${CUSTOM_REVISION}'|g" package/base-files/files/etc/openwrt_release
+    fi
+    # 强制重写并固化 openwrt_version 文本内容
+    echo "${CUSTOM_REVISION}" > package/base-files/files/etc/openwrt_version
+fi
+
+# ==========================================
+# 前端与主题无死角清理（含 CSS/Banner/自定义主题 Logo）
+# ==========================================
+find package/ -type f \( -name "*.htm" -o -name "*.html" -o -name "*.js" -o -name "*.lua" -o -name "*.css" -o -name "*.json" -o -name "*.svg" \) -print0 2>/dev/null | xargs -0 -r sed -i "s|ImmortalWrt|OpenWrt|g"
+
+# 修改 25.12 的 TTY 登录 Banner（SSH 连入时显示的大字）
+if [ -f package/base-files/files/etc/banner ]; then
+    sed -i "s|ImmortalWrt|OpenWrt|g" package/base-files/files/etc/banner
+fi
+
+# ==========================================
+#  内核、U-Boot 与内核头文件深度洗网
+# ==========================================
+find include/ target/ -type f ! -name "diy2.sh" -print0 2>/dev/null | xargs -0 -r sed -i "s|ImmortalWrt|OpenWrt|g"
+find target/ -type f -name "*Makefile*" -print0 2>/dev/null | xargs -0 -r sed -i "s|ImmortalWrt|OpenWrt|g"
+
+# ==========================================
+#  安全的缓存清理（保护编译环境与配置状态）
+# ==========================================
 rm -rf build_dir/target-*/base-files*
-rm -rf build_dir/target-*/luci-theme-argon*
+rm -rf build_dir/target-*/luci-theme-*
 rm -rf build_dir/target-*/luci-base*
+rm -rf build_dir/target-*/luci-mod-*
+rm -rf staging_dir/target-*/root-*
+rm -rf staging_dir/target-*/pkginfo/base-files.version
+
+# 仅精准删除 tmp/ 目录下的配置扫描快照，绝不破坏核心状态锁
+if [ -d tmp ]; then
+    find tmp/ -type f -name "*.mk" -o -name "*.info" -o -name "*info*" 2>/dev/null | xargs rm -f 2>/dev/null || true
+fi
 
 # ==================================================
 # 6. 修改默认主题
