@@ -33,9 +33,7 @@
   - Passwall（Hysteria，nftables 透明代理）
   - Lucky（全能工具）
   - Diskman 磁盘管理（含 btrfs/lsblk/mdadm）
-  - UPnP（nftables 后端）
-  - Zerotier、VLMCSD、CPUFreq 调节、定时重启、Nft-QoS、文件传输、TTYD 终端
-  - DDNS（含 Cloudflare 脚本）
+  - VLMCSD、重启、Nft-QoS、文件传输、TTYD 终端
   - 时间同步（chrony）、HD idle 休眠、Samba4
 - **构建格式**：GZIP 压缩的 EFI 镜像
 
