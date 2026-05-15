@@ -10,8 +10,6 @@
 - **防火墙**：Firewall4 + nftables（完整支持 tproxy/redir/offload 等模块，无 iptables 遗留，兼容层 iptables-nft）
 - **IPv6**：完整支持（DHCPv6、NAT6、隧道、odhcp6c + odhcpd-ipv6only）
 - **内核优化**：
-  - 时钟频率 1000Hz
-  - BBR 拥塞控制（默认开启）
   - TCP FastOpen、ECN 支持
   - Cgroup 内存/进程隔离
   - ZRAM 与 ZSWAP 内存压缩
@@ -33,7 +31,7 @@
   - Passwall（Hysteria，nftables 透明代理）
   - Lucky（全能工具）
   - Diskman 磁盘管理（含 btrfs/lsblk/mdadm）
-  - VLMCSD、重启、Nft-QoS、文件传输、TTYD 终端
+  - VLMCSD、重启、关机、Nft-QoS、文件传输、TTYD 终端
   - 时间同步（chrony）、HD idle 休眠、Samba4
 - **构建格式**：GZIP 压缩的 EFI 镜像
 
