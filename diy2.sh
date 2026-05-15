@@ -90,24 +90,26 @@ echo "正在注入自定义版本号..."
 
 # 1. 强制锁定本地时区（Asia/Shanghai），防止海外云服务器跨时区时间漂移
 COMPILE_DATE=$(TZ='Asia/Shanghai' date +%Y.%m.%d)
-CUSTOM_VERSION="OpenWrt (${COMPILE_DATE} compiled by cheery)"
+
+# 严格全角括号格式，外部包裹双引号，绝不含单引号
+CUSTOM_VERSION="OpenWrt （${COMPILE_DATE} compiled by cheery)"
 CUSTOM_REVISION="${COMPILE_DATE} compiled by cheery"
 
 # ==========================================
-# 顶级版本主控文件补强（全局死锁动态变量）
+# 顶级版本主控文件补强（全局死锁动态变量 - 彻底剥离单引号风险）
 # ==========================================
 if [ -f "include/version.mk" ]; then
-    # 2. 统一将分隔符更换为安全的逗号 [,]，防止内容中含特殊符号导致 s 选项报错
-    sed --follow-symlinks -i -E "s,VERSION_DIST(:=|=).*本地?,VERSION_DIST:='OpenWrt',g" include/version.mk
+    # 统一使用逗号 [,] 作为安全分隔符，将变量值改为不带单引号的纯净文本
+    sed --follow-symlinks -i -E "s,VERSION_DIST(:=|=).*本地?,VERSION_DIST:=OpenWrt,g" include/version.mk
     sed --follow-symlinks -i "s,ImmortalWrt,OpenWrt,g" include/version.mk
     
-    # 强制锁定全局发行版本号与描述
-    sed --follow-symlinks -i "s,VERSION_NUMBER:=.*,VERSION_NUMBER:='${COMPILE_DATE}',g" include/version.mk
-    sed --follow-symlinks -i "s,VERSION_CODE:=.*,VERSION_CODE:='compiled by cheery',g" include/version.mk
-    sed --follow-symlinks -i "s,VERSION_REPO:=.*,VERSION_REPO:='OpenWrt',g" include/version.mk
+    # 强制锁定全局发行版本号与描述（移除单引号，直接使用裸字符或双引号锁定）
+    sed --follow-symlinks -i "s,VERSION_NUMBER:=.*,VERSION_NUMBER:=${COMPILE_DATE},g" include/version.mk
+    sed --follow-symlinks -i "s,VERSION_CODE:=.*,VERSION_CODE:=compiled by cheery,g" include/version.mk
+    sed --follow-symlinks -i "s,VERSION_REPO:=.*,VERSION_REPO:=OpenWrt,g" include/version.mk
     
     # 彻底封印 Git Commit 动态版本号抓取
-    sed --follow-symlinks -i "s,VERSION_REVISION:=.*,VERSION_REVISION:='${CUSTOM_REVISION}',g" include/version.mk
+    sed --follow-symlinks -i "s,VERSION_REVISION:=.*,VERSION_REVISION:=${CUSTOM_REVISION},g" include/version.mk
 fi
 
 # ==========================================
@@ -121,7 +123,7 @@ if [ -d "package/base-files" ]; then
     \) -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s,default \"ImmortalWrt\",default \"OpenWrt\",g"
 fi
 
-# 3. 修正：遵循 Kconfig 语法规范，使用 sed 动态替换 image-config.in 内部已有的默认菜单配置值，绝不使用追加
+# 遵循 Kconfig 语法规范，使用标准的双引号形式替换，确保 Web 渲染纯净
 if [ -f "package/base-files/image-config.in" ]; then
     sed --follow-symlinks -i -E "s,(config VERSION_DIST.*default \").*(\"),\1OpenWrt\2,g" package/base-files/image-config.in
     sed --follow-symlinks -i -E "s,(config VERSION_NUMBER.*default \").*(\"),\1${COMPILE_DATE}\2,g" package/base-files/image-config.in
@@ -131,6 +133,7 @@ fi
 # 强行重写释放至固件的版本与发布信息
 if [ -d "package/base-files/files/etc" ]; then
     if [ -f "package/base-files/files/etc/openwrt_release" ]; then
+        # 释放到文件系统的信息同样剔除内部单引号
         sed --follow-symlinks -i "s,DISTRIB_DESCRIPTION='.*',DISTRIB_DESCRIPTION='${CUSTOM_VERSION}',g" package/base-files/files/etc/openwrt_release
         sed --follow-symlinks -i "s,DISTRIB_ID='.*',DISTRIB_ID='OpenWrt',g" package/base-files/files/etc/openwrt_release
         sed --follow-symlinks -i "s,DISTRIB_REVISION='.*',DISTRIB_REVISION='${CUSTOM_REVISION}',g" package/base-files/files/etc/openwrt_release
