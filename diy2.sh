@@ -85,11 +85,10 @@ sed -i 's/^root:[^:]*:/root::/' package/base-files/files/etc/shadow
 # ==================================================
 # 5. 修改固件版本描述 
 # ==================================================
-echo "正在注入自定义版本号与彻底去硬编码（剔除占位符纯净版）..."
+echo "正在注入自定义版本号"
 
 # 提前声明日期变量，确保全局时间戳绝对统一
 COMPILE_DATE=$(date +%Y.%m.%d)
-# 【核心修正】彻底删除 %V 和 %C 占位符，防止系统在后台二次拼接硬编码版本号
 CUSTOM_VERSION="OpenWrt (${COMPILE_DATE} compiled by cheery)"
 CUSTOM_REVISION="${COMPILE_DATE} compiled by cheery"
 
