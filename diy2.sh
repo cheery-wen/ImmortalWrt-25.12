@@ -83,7 +83,7 @@ sed -i "s/hostname='ImmortalWrt'/hostname='OpenWrt'/g" package/base-files/files/
 sed -i 's/^root:[^:]*:/root::/' package/base-files/files/etc/shadow
 
 # ==================================================
-# 5. 修改固件版本描述 (保留修订号)
+# 5. 修改固件版本描述 
 # ==================================================
 echo "正在注入自定义版本号与彻底去硬编码（剔除占位符纯净版）..."
 
