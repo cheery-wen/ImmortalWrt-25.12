@@ -97,7 +97,7 @@ CUSTOM_REVISION="${COMPILE_DATE} compiled by cheery"
 # 顶级版本主控文件补强（全局死锁动态变量）
 # ==========================================
 if [ -f "include/version.mk" ]; then
-    # 2. 修正参数顺序，且统一将分隔符更换为更安全的逗号 [,]，防止内容中含特殊符号导致 s 选项报错
+    # 2. 统一将分隔符更换为安全的逗号 [,]，防止内容中含特殊符号导致 s 选项报错
     sed --follow-symlinks -i -E "s,VERSION_DIST(:=|=).*本地?,VERSION_DIST:='OpenWrt',g" include/version.mk
     sed --follow-symlinks -i "s,ImmortalWrt,OpenWrt,g" include/version.mk
     
@@ -121,10 +121,11 @@ if [ -d "package/base-files" ]; then
     \) -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s,default \"ImmortalWrt\",default \"OpenWrt\",g"
 fi
 
-# 安全幂等写入：使用 grep 检查，避免重复追加堆积垃圾文本
+# 3. 修正：遵循 Kconfig 语法规范，使用 sed 动态替换 image-config.in 内部已有的默认菜单配置值，绝不使用追加
 if [ -f "package/base-files/image-config.in" ]; then
-    grep -q "DISTRIB_DESCRIPTION=" package/base-files/image-config.in || echo "DISTRIB_DESCRIPTION='${CUSTOM_VERSION}'" >> package/base-files/image-config.in
-    grep -q "DISTRIB_REVISION=" package/base-files/image-config.in || echo "DISTRIB_REVISION='${CUSTOM_REVISION}'" >> package/base-files/image-config.in
+    sed --follow-symlinks -i -E "s,(config VERSION_DIST.*default \").*(\"),\1OpenWrt\2,g" package/base-files/image-config.in
+    sed --follow-symlinks -i -E "s,(config VERSION_NUMBER.*default \").*(\"),\1${COMPILE_DATE}\2,g" package/base-files/image-config.in
+    sed --follow-symlinks -i -E "s,(config VERSION_CODE.*default \").*(\"),\1compiled by cheery\2,g" package/base-files/image-config.in
 fi
 
 # 强行重写释放至固件的版本与发布信息
