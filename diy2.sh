@@ -97,17 +97,17 @@ CUSTOM_REVISION="${COMPILE_DATE} compiled by cheery"
 # 顶级版本主控文件补强（全局死锁动态变量）
 # ==========================================
 if [ -f "include/version.mk" ]; then
-    # 2. 修正参数顺序：长参数 --follow-symlinks 必须置于短参数与表达式之前，防止解析冲突
-    sed --follow-symlinks -i -E "s|VERSION_DIST(:=|=).*|VERSION_DIST:='OpenWrt'|g" include/version.mk
-    sed --follow-symlinks -i "s|ImmortalWrt|OpenWrt|g" include/version.mk
+    # 2. 修正参数顺序，且统一将分隔符更换为更安全的逗号 [,]，防止内容中含特殊符号导致 s 选项报错
+    sed --follow-symlinks -i -E "s,VERSION_DIST(:=|=).*本地?,VERSION_DIST:='OpenWrt',g" include/version.mk
+    sed --follow-symlinks -i "s,ImmortalWrt,OpenWrt,g" include/version.mk
     
     # 强制锁定全局发行版本号与描述
-    sed --follow-symlinks -i "s|VERSION_NUMBER:=.*|VERSION_NUMBER:='${COMPILE_DATE}'|g" include/version.mk
-    sed --follow-symlinks -i "s|VERSION_CODE:=.*|VERSION_CODE:='compiled by cheery'|g" include/version.mk
-    sed --follow-symlinks -i "s|VERSION_REPO:=.*|VERSION_REPO:='OpenWrt'|g" include/version.mk
+    sed --follow-symlinks -i "s,VERSION_NUMBER:=.*,VERSION_NUMBER:='${COMPILE_DATE}',g" include/version.mk
+    sed --follow-symlinks -i "s,VERSION_CODE:=.*,VERSION_CODE:='compiled by cheery',g" include/version.mk
+    sed --follow-symlinks -i "s,VERSION_REPO:=.*,VERSION_REPO:='OpenWrt',g" include/version.mk
     
     # 彻底封印 Git Commit 动态版本号抓取
-    sed --follow-symlinks -i "s|VERSION_REVISION:=.*|VERSION_REVISION:='${CUSTOM_REVISION}'|g" include/version.mk
+    sed --follow-symlinks -i "s,VERSION_REVISION:=.*,VERSION_REVISION:='${CUSTOM_REVISION}',g" include/version.mk
 fi
 
 # ==========================================
@@ -118,7 +118,7 @@ if [ -d "package/base-files" ]; then
         -name "Kconfig" -o \
         -name "image-config.in" -o \
         -name "Config.in" \
-    \) -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s|default \"ImmortalWrt\"|default \"OpenWrt\"|g"
+    \) -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s,default \"ImmortalWrt\",default \"OpenWrt\",g"
 fi
 
 # 安全幂等写入：使用 grep 检查，避免重复追加堆积垃圾文本
@@ -130,9 +130,9 @@ fi
 # 强行重写释放至固件的版本与发布信息
 if [ -d "package/base-files/files/etc" ]; then
     if [ -f "package/base-files/files/etc/openwrt_release" ]; then
-        sed --follow-symlinks -i "s|DISTRIB_DESCRIPTION='.*'|DISTRIB_DESCRIPTION='${CUSTOM_VERSION}'|g" package/base-files/files/etc/openwrt_release
-        sed --follow-symlinks -i "s|DISTRIB_ID='.*'|DISTRIB_ID='OpenWrt'|g" package/base-files/files/etc/openwrt_release
-        sed --follow-symlinks -i "s|DISTRIB_REVISION='.*'|DISTRIB_REVISION='${CUSTOM_REVISION}'|g" package/base-files/files/etc/openwrt_release
+        sed --follow-symlinks -i "s,DISTRIB_DESCRIPTION='.*',DISTRIB_DESCRIPTION='${CUSTOM_VERSION}',g" package/base-files/files/etc/openwrt_release
+        sed --follow-symlinks -i "s,DISTRIB_ID='.*',DISTRIB_ID='OpenWrt',g" package/base-files/files/etc/openwrt_release
+        sed --follow-symlinks -i "s,DISTRIB_REVISION='.*',DISTRIB_REVISION='${CUSTOM_REVISION}',g" package/base-files/files/etc/openwrt_release
     fi
     # 强制重写并固化 openwrt_version 文本内容
     echo "${CUSTOM_REVISION}" > "package/base-files/files/etc/openwrt_version"
@@ -150,23 +150,23 @@ if [ -d "package" ]; then
         -name "*.css" -o \
         -name "*.json" -o \
         -name "*.svg" \
-    \) -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s|ImmortalWrt|OpenWrt|g"
+    \) -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s,ImmortalWrt,OpenWrt,g"
 fi
 
 # 修改 TTY 登录 Banner
 if [ -f "package/base-files/files/etc/banner" ]; then
-    sed --follow-symlinks -i "s|ImmortalWrt|OpenWrt|g" package/base-files/files/etc/banner
+    sed --follow-symlinks -i "s,ImmortalWrt,OpenWrt,g" package/base-files/files/etc/banner
 fi
 
 # ==========================================
 #  内核、U-Boot 与内核头文件深度洗网
 # ==========================================
 if [ -d "include" ] || [ -d "target" ]; then
-    find include/ target/ -type f ! -name "diy2.sh" -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s|ImmortalWrt|OpenWrt|g"
+    find include/ target/ -type f ! -name "diy2.sh" -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s,ImmortalWrt,OpenWrt,g"
 fi
 
 if [ -d "target" ]; then
-    find target/ -type f -name "*Makefile*" -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s|ImmortalWrt|OpenWrt|g"
+    find target/ -type f -name "*Makefile*" -print0 2>/dev/null | xargs -0 -r sed --follow-symlinks -i "s,ImmortalWrt,OpenWrt,g"
 fi
 
 # ==========================================
