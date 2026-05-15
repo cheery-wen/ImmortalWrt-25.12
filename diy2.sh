@@ -84,55 +84,90 @@ sed -i 's/^root:[^:]*:/root::/' package/base-files/files/etc/shadow
 
 # ==================================================
 # 5. 修改固件版本描述 
-# ==================================================
-echo "正在注入自定义版本号"
+# ==============================================================================
+set -E -o pipefail  # 激活高级正则支持，同时确保管道中任意命令失败时立即抛出异常
+echo "正在注入自定义版本号..."
 
-# 提前声明日期变量，确保全局时间戳绝对统一
-COMPILE_DATE=$(date +%Y.%m.%d)
+# 1. 强制锁定本地时区（Asia/Shanghai），防止海外云服务器跨时区时间漂移
+COMPILE_DATE=$(TZ='Asia/Shanghai' date +%Y.%m.%d)
 CUSTOM_VERSION="OpenWrt (${COMPILE_DATE} compiled by cheery)"
 CUSTOM_REVISION="${COMPILE_DATE} compiled by cheery"
 
 # ==========================================
-# 顶级版本主控文件补强（全局兜底）
+# 顶级版本主控文件补强（全局死锁动态变量）
 # ==========================================
-if [ -f include/version.mk ]; then
-    sed -i "s|VERSION_DIST:='.*'|VERSION_DIST:='OpenWrt'|g" include/version.mk
-    sed -i "s|VERSION_DIST:=.*|VERSION_DIST:=OpenWrt|g" include/version.mk
-    sed -i "s|ImmortalWrt|OpenWrt|g" include/version.mk
+if [ -f "include/version.mk" ]; then
+    # 2. 所有 sed -i 统一追加 --follow-symlinks 安全穿透软链接
+    sed -i --follow-symlinks -E "s|VERSION_DIST(:=|=).*|VERSION_DIST:='OpenWrt'|g" include/version.mk
+    sed -i --follow-symlinks "s|ImmortalWrt|OpenWrt|g" include/version.mk
+    
+    # 强制锁定全局发行版本号与描述
+    sed -i --follow-symlinks "s|VERSION_NUMBER:=.*|VERSION_NUMBER:='${COMPILE_DATE}'|g" include/version.mk
+    sed -i --follow-symlinks "s|VERSION_CODE:=.*|VERSION_CODE:='compiled by cheery'|g" include/version.mk
+    sed -i --follow-symlinks "s|VERSION_REPO:=.*|VERSION_REPO:='OpenWrt'|g" include/version.mk
+    
+    # 彻底封印 Git Commit 动态版本号抓取
+    sed -i --follow-symlinks "s|VERSION_REVISION:=.*|VERSION_REVISION:='${CUSTOM_REVISION}'|g" include/version.mk
 fi
 
 # ==========================================
 # 25.12 版本定义（Kconfig & 类 image-config 文件）
 # ==========================================
-find package/base-files/ -type f \( -name "Kconfig" -o -name "image-config.in" -o -name "Config.in" \) -print0 2>/dev/null | xargs -0 -r sed -i "s|default \"ImmortalWrt\"|default \"OpenWrt\"|g"
+if [ -d "package/base-files" ]; then
+    find package/base-files/ -type f \( \
+        -name "Kconfig" -o \
+        -name "image-config.in" -o \
+        -name "Config.in" \
+    \) -print0 2>/dev/null | xargs -0 -r sed -i --follow-symlinks "s|default \"ImmortalWrt\"|default \"OpenWrt\"|g"
+fi
 
-# 强行重写释放至固件的版本与发布信息（包含 openwrt_version 绝对覆盖）
-if [ -d package/base-files/files/etc ]; then
-    # 强制重写 openwrt_release
-    if [ -f package/base-files/files/etc/openwrt_release ]; then
-        sed -i "s|DISTRIB_DESCRIPTION='.*'|DISTRIB_DESCRIPTION='${CUSTOM_VERSION}'|g" package/base-files/files/etc/openwrt_release
-        sed -i "s|DISTRIB_ID='.*'|DISTRIB_ID='OpenWrt'|g" package/base-files/files/etc/openwrt_release
-        sed -i "s|DISTRIB_REVISION='.*'|DISTRIB_REVISION='${CUSTOM_REVISION}'|g" package/base-files/files/etc/openwrt_release
+# 安全幂等写入：使用 grep 检查，避免重复追加堆积垃圾文本
+if [ -f "package/base-files/image-config.in" ]; then
+    grep -q "DISTRIB_DESCRIPTION=" package/base-files/image-config.in || echo "DISTRIB_DESCRIPTION='${CUSTOM_VERSION}'" >> package/base-files/image-config.in
+    grep -q "DISTRIB_REVISION=" package/base-files/image-config.in || echo "DISTRIB_REVISION='${CUSTOM_REVISION}'" >> package/base-files/image-config.in
+fi
+
+# 强行重写释放至固件的版本与发布信息
+if [ -d "package/base-files/files/etc" ]; then
+    if [ -f "package/base-files/files/etc/openwrt_release" ]; then
+        sed -i --follow-symlinks "s|DISTRIB_DESCRIPTION='.*'|DISTRIB_DESCRIPTION='${CUSTOM_VERSION}'|g" package/base-files/files/etc/openwrt_release
+        sed -i --follow-symlinks "s|DISTRIB_ID='.*'|DISTRIB_ID='OpenWrt'|g" package/base-files/files/etc/openwrt_release
+        sed -i --follow-symlinks "s|DISTRIB_REVISION='.*'|DISTRIB_REVISION='${CUSTOM_REVISION}'|g" package/base-files/files/etc/openwrt_release
     fi
     # 强制重写并固化 openwrt_version 文本内容
-    echo "${CUSTOM_REVISION}" > package/base-files/files/etc/openwrt_version
+    echo "${CUSTOM_REVISION}" > "package/base-files/files/etc/openwrt_version"
 fi
 
 # ==========================================
-# 前端与主题无死角清理（含 CSS/Banner/自定义主题 Logo）
+# 前端与主题无死角清理（包含软链接 feeds 深度穿透）
 # ==========================================
-find package/ -type f \( -name "*.htm" -o -name "*.html" -o -name "*.js" -o -name "*.lua" -o -name "*.css" -o -name "*.json" -o -name "*.svg" \) -print0 2>/dev/null | xargs -0 -r sed -i "s|ImmortalWrt|OpenWrt|g"
+if [ -d "package" ]; then
+    find package/ -type f \( \
+        -name "*.htm" -o \
+        -name "*.html" -o \
+        -name "*.js" -o \
+        -name "*.lua" -o \
+        -name "*.css" -o \
+        -name "*.json" -o \
+        -name "*.svg" \
+    \) -print0 2>/dev/null | xargs -0 -r sed -i --follow-symlinks "s|ImmortalWrt|OpenWrt|g"
+fi
 
-# 修改 25.12 的 TTY 登录 Banner（SSH 连入时显示的大字）
-if [ -f package/base-files/files/etc/banner ]; then
-    sed -i "s|ImmortalWrt|OpenWrt|g" package/base-files/files/etc/banner
+# 修改 TTY 登录 Banner
+if [ -f "package/base-files/files/etc/banner" ]; then
+    sed -i --follow-symlinks "s|ImmortalWrt|OpenWrt|g" package/base-files/files/etc/banner
 fi
 
 # ==========================================
 #  内核、U-Boot 与内核头文件深度洗网
 # ==========================================
-find include/ target/ -type f ! -name "diy2.sh" -print0 2>/dev/null | xargs -0 -r sed -i "s|ImmortalWrt|OpenWrt|g"
-find target/ -type f -name "*Makefile*" -print0 2>/dev/null | xargs -0 -r sed -i "s|ImmortalWrt|OpenWrt|g"
+if [ -d "include" ] || [ -d "target" ]; then
+    find include/ target/ -type f ! -name "diy2.sh" -print0 2>/dev/null | xargs -0 -r sed -i --follow-symlinks "s|ImmortalWrt|OpenWrt|g"
+fi
+
+if [ -d "target" ]; then
+    find target/ -type f -name "*Makefile*" -print0 2>/dev/null | xargs -0 -r sed -i --follow-symlinks "s|ImmortalWrt|OpenWrt|g"
+fi
 
 # ==========================================
 #  安全的缓存清理（保护编译环境与配置状态）
@@ -144,9 +179,13 @@ rm -rf build_dir/target-*/luci-mod-*
 rm -rf staging_dir/target-*/root-*
 rm -rf staging_dir/target-*/pkginfo/base-files.version
 
-# 仅精准删除 tmp/ 目录下的配置扫描快照，绝不破坏核心状态锁
-if [ -d tmp ]; then
-    find tmp/ -type f -name "*.mk" -o -name "*.info" -o -name "*info*" 2>/dev/null | xargs rm -f 2>/dev/null || true
+# 仅精准删除 tmp/ 目录下的配置扫描快照
+if [ -d "tmp" ]; then
+    find tmp/ -type f \( \
+        -name "*.mk" -o \
+        -name "*.info" -o \
+        -name "*info*" \
+    \) 2>/dev/null | xargs rm -f 2>/dev/null || true
 fi
 
 # ==================================================
